@@ -1,0 +1,16 @@
+{
+    "name": "polyushina/task02",
+    "require": {
+        "wp-cli/php-cli-tools": "^0.11.13"
+    },
+	"bin":[
+		"bin/hangman.php"
+	],
+	"autoload":{
+		"files": [
+			"src/Controller.php",
+			"src/View.php"
+		]
+	}	
+	
+}
