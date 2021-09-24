@@ -1,7 +1,7 @@
 <?php
 
 namespace polyushina402\hangman\View;
-	
+
 function showGame($faultCount, $progress)
 {
 //псведографика
