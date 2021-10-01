@@ -3,14 +3,17 @@
 namespace polyushina402\hangman\Controller;
 
 use function polyushina402\hangman\View\showGame;
+use function polyushina402\hangman\View\showList;
+use function polyushina402\hangman\View\showReplay;
+use function polyushina402\hangman\View\help;
 
 function key()
 {
-	$key = readline("Введите ключ: ");
-	if ($key == "--new") {
-		startGame();
+    $key = readline("Введите ключ: ");
+    if ($key == "--new") {
+        startGame();
     } elseif ($key == "--list") {
-		showList();
+        showList();
     } elseif ($key == "--replay") {
         showReplay();
     } elseif ($key == "--help") {
