@@ -4,6 +4,23 @@ namespace polyushina402\hangman\Controller;
 
 use function polyushina402\hangman\View\showGame;
 
+function key()
+{
+	$key = readline("Введите ключ: ");
+	if ($key == "--new") {
+		startGame();
+    } elseif ($key == "--list") {
+		showList();
+    } elseif ($key == "--replay") {
+        showReplay();
+    } elseif ($key == "--help") {
+        help();
+    } else {
+        echo "Не верный ключ.\n";
+        key();
+    }
+}
+
 function startGame()
 {
     $words = array("string", "letter", "artist", "arrive");
