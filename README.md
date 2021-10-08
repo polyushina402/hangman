@@ -32,14 +32,14 @@ PHP 7.4.23
 Установить composer, если он не установлен;
 Перейти в корневой каталог;
 Выполнить в консоли команду composer update;
-Перейти в каталог bin из корнегого каталога и запустить файл cold-hot.bat.
+Перейти в каталог bin из корнегого каталога и запустить файл hangman.bat.
 Из Packagist:
 
 Установить composer, если он не установлен;
 Перейти в каталог, в который вы будете клонировать проект;
-Выполнить команду composer create-project sifon/cold-hot;
+Выполнить команду composer create-project polyushina/hangman;
 Перейти в каталог bin;
-Запустить файл cold-hot.bat.
+Запустить файл hangman.bat.
 
 ###Ссылки
 https://packagist.org/packages/polyushina/hangman

@@ -1,5 +1,5 @@
 @echo off
 
-php hangman.php
+php hangman.php %1
 
 pause
