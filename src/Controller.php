@@ -2,21 +2,19 @@
 
 namespace polyushina402\hangman\Controller;
 
-
-
 use function polyushina402\hangman\View\showGame;
 //use function polyushina402\hangman\View\showList;
 //use function polyushina402\hangman\View\showReplay;
 use function polyushina402\hangman\View\help;
 
-function key($key)
+function key($key, $id)
 {
     if ($key == "--new" || $key == "-n") {
         startGame();
     } elseif ($key == "--list" || $key == "-l") {
         showList();
     } elseif ($key == "--replay" || $key == "-r") {
-        showReplay();
+        showReplay($id);
     } elseif ($key == "--help" || $key == "-h") {
         help();
     } else {
@@ -118,10 +116,10 @@ function showList()
     }
 }
 
-function showReplay()
+function showReplay($id)
 {
     $db = openDatabase();
-    $id = \cli\prompt("Введите id игры");
+    //$id = \cli\prompt("Введите id игры");
     $idGame = $db->querySingle("SELECT EXISTS(SELECT 1 FROM gamesInfo WHERE idGame='$id')");
 
     if ($idGame == 1) {
@@ -135,7 +133,7 @@ function showReplay()
         $faultCount = 0;
 
         while ($row = $query->fetchArray()) {
-            viewGame($faultCount, $progress);
+            showGame($faultCount, $progress);
             $letter = $row[0];
             $result = $row[1];
             \cli\line("Буква: " . $letter);
@@ -150,7 +148,7 @@ function showReplay()
                 $faultCount++;
             }
         }
-        viewGame($faultCount, $progress);
+        showGame($faultCount, $progress);
 
         \cli\line($db->querySingle("SELECT result from gamesInfo where idGame = '$id'"));
     } else {

@@ -6,8 +6,14 @@ use function polyushina402\hangman\Controller\key;
 
 if (isset($argv[1])) {
     $key = $argv[1];
-    key($key);
+	if ($key == "--replay" || "-r") {
+		key($key, $argv[2]);
+	} else {
+		$argv[2] = NULL;
+		key($key, $argv[2]);
+	}
 } else {
+	$argv[2] = NULL;
     $key = "-n";
-    key($key);
+    key($key, $argv[2]);
 }
