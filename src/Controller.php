@@ -24,17 +24,17 @@ function key($key, $id)
 
 function startGame()
 {
-	$db = openDatabase();
-	
-	date_default_timezone_set("Europe/Moscow");
+    $db = openDatabase();
+
+    date_default_timezone_set("Europe/Moscow");
     $gameData = date("d") . "." . date("m") . "." . date("Y");
     $gameTime = date("H") . ":" . date("i") . ":" . date("s");
     $playerName = getenv("username");
-	
+
     $words = array("string", "letter", "artist", "arrive");
     $playWord = $words[array_rand($words)];
-	
-	$db->exec("INSERT INTO gamesInfo (
+
+    $db->exec("INSERT INTO gamesInfo (
         gameData, 
         gameTime, 
         playerName, 
@@ -48,7 +48,7 @@ function startGame()
         'НЕ ЗАКОНЧЕНО')");
 
     $idGame = $db->querySingle("SELECT idGame FROM gamesInfo ORDER BY idGame DESC LIMIT 1");
-	
+
     $remainingLetters = substr($playWord, 1, -1);
     $maxAnswers = strlen($remainingLetters);
     $maxFaults = 6;
@@ -59,7 +59,7 @@ function startGame()
 
     $faultCount = 0;
     $answersCount = 0;
-	$attempts = 0;
+    $attempts = 0;
 
     do {
         showGame($faultCount, $progress);
@@ -77,14 +77,14 @@ function startGame()
 
         if ($tempCount == 0) {
             $faultCount++;
-			$result = 0;
+            $result = 0;
         } else {
             $result = 1;
         }
-		
-		$attempts++;
-		
-		$db->exec("INSERT INTO stepsInfo (
+
+        $attempts++;
+
+        $db->exec("INSERT INTO stepsInfo (
             idGame, 
             attempts, 
             letter, 
@@ -95,16 +95,16 @@ function startGame()
             '$letter', 
             '$result')");
     } while ($faultCount < $maxFaults && $answersCount < $maxAnswers);
-	
-	 if ($faultCount < $maxFaults) {
+
+    if ($faultCount < $maxFaults) {
         $result = "ПОБЕДА";
     } else {
         $result = "ПОРАЖЕНИЕ";
     }
-	
+
     showGame($faultCount, $progress);
     showResult($answersCount, $playWord);
-	updateDB($idGame, $result);
+    updateDB($idGame, $result);
 }
 
 function showList()

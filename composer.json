@@ -12,5 +12,8 @@
 			"src/View.php"
 		]
 	},	
-	"type": "project"
+	"type": "project",
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.6"
+    }
 }
