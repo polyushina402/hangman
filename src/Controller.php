@@ -2,10 +2,12 @@
 
 namespace polyushina402\hangman\Controller;
 
+use RedBeanPHP\R;
+
 use function polyushina402\hangman\View\showGame;
-//use function polyushina402\hangman\View\showList;
-//use function polyushina402\hangman\View\showReplay;
 use function polyushina402\hangman\View\help;
+
+R::setup("sqlite: DB.db");
 
 function key($key, $id)
 {
@@ -24,30 +26,21 @@ function key($key, $id)
 
 function startGame()
 {
-    $db = openDatabase();
-
     date_default_timezone_set("Europe/Moscow");
-    $gameData = date("d") . "." . date("m") . "." . date("Y");
+    $gameDate = date("d") . "." . date("m") . "." . date("Y");
     $gameTime = date("H") . ":" . date("i") . ":" . date("s");
     $playerName = getenv("username");
 
     $words = array("string", "letter", "artist", "arrive");
     $playWord = $words[array_rand($words)];
 
-    $db->exec("INSERT INTO gamesInfo (
-        gameData, 
-        gameTime, 
-        playerName, 
-        playWord, 
-        result
-        ) VALUES (
-        '$gameData', 
-        '$gameTime', 
-        '$playerName', 
-        '$playWord', 
-        'НЕ ЗАКОНЧЕНО')");
-
-    $idGame = $db->querySingle("SELECT idGame FROM gamesInfo ORDER BY idGame DESC LIMIT 1");
+    $db = R::dispense('games');
+    $db->date = $gameDate;
+    $db->time = $gameTime;
+    $db->name = $playerName;
+    $db->word = $playWord;
+    $db->result = "НЕ ЗАКОНЧЕНО";
+    $idGame = R::store($db);
 
     $remainingLetters = substr($playWord, 1, -1);
     $maxAnswers = strlen($remainingLetters);
@@ -84,16 +77,12 @@ function startGame()
 
         $attempts++;
 
-        $db->exec("INSERT INTO stepsInfo (
-            idGame, 
-            attempts, 
-            letter, 
-            result
-            ) VALUES (
-            '$idGame', 
-            '$attempts', 
-            '$letter', 
-            '$result')");
+        $db = R::dispense('steps');
+        $db->idGame = $idGame;
+        $db->attempts = $attempts;
+        $db->letter = $letter;
+        $db->result = $result;
+        R::store($db);
     } while ($faultCount < $maxFaults && $answersCount < $maxAnswers);
 
     if ($faultCount < $maxFaults) {
@@ -109,33 +98,35 @@ function startGame()
 
 function showList()
 {
-    $db = openDatabase();
-    $query = $db->query('SELECT * FROM gamesInfo');
-    while ($row = $query->fetchArray()) {
-        echo "ID $row[0])\n    Дата:$row[1] $row[2]\n    Имя:$row[3]\n    Слово:$row[4]\n    Результат:$row[5]\n";
+    $db = R::getAll('SELECT * FROM games');
+    if (sizeof($db) !== 0) {
+        foreach ($db as $row) {
+            \cli\line("ID: $row[id]");
+            \cli\line("Дата: $row[date]");
+            \cli\line("Время: $row[time]");
+            \cli\line("Имя: $row[name]");
+            \cli\line("Загаданное слово: $row[word]");
+            \cli\line("Результат: $row[result]");
+        }
+    } else {
+        \cli\line("Баа данных пуста.");
     }
 }
 
 function showReplay($id)
 {
-    $db = openDatabase();
-    //$id = \cli\prompt("Введите id игры");
-    $idGame = $db->querySingle("SELECT EXISTS(SELECT 1 FROM gamesInfo WHERE idGame='$id')");
-
-    if ($idGame == 1) {
-        $query = $db->query("SELECT letter, result from stepsInfo where idGame = '$id'");
-        $playWord = $db->querySingle("SELECT playWord from gamesInfo where idGame = '$id'");
-
-        $progress = "______";
-        $progress[0] = $playWord[0];
-        $progress[-1] = $playWord[-1];
-        $remainingLetters = substr($playWord, 1, -1);
-        $faultCount = 0;
-
-        while ($row = $query->fetchArray()) {
+    $db = R::getAll("SELECT letter, result from steps where id_game = '$id'");
+    $playWord = R::getAll("SELECT word from games where id = '$id'");
+    $progress = "______";
+    $progress[0] = $playWord[0]["word"][0];
+    $progress[-1] = $playWord[0]["word"][-1];
+    $remainingLetters = substr($playWord[0]["word"], 1, -1);
+    $faultCount = 0;
+    if (sizeof($db) !== 0) {
+        foreach ($db as $row) {
             showGame($faultCount, $progress);
-            $letter = $row[0];
-            $result = $row[1];
+            $letter = $row["letter"];
+            $result = $row["result"];
             \cli\line("Буква: " . $letter);
             for ($i = 0; $i < strlen($remainingLetters); $i++) {
                 if ($remainingLetters[$i] == $letter) {
@@ -150,54 +141,17 @@ function showReplay($id)
         }
         showGame($faultCount, $progress);
 
-        \cli\line($db->querySingle("SELECT result from gamesInfo where idGame = '$id'"));
+        \cli\line(R::getCell("SELECT result from games where id = '$id'"));
     } else {
-        \cli\line("Такой игры не обнаружено!");
+        \cli\line("Отсутствуют данные по игре, либо ходы не совершались.");
     }
-}
-
-function createDatabase()
-{
-    $db = new \SQLite3('gamedb.db');
-
-    $gamesInfoTable = "CREATE TABLE gamesInfo(
-        idGame INTEGER PRIMARY KEY,
-        gameData DATE,
-        gameTime TIME,
-        playerName TEXT,
-        playWord TEXT,
-        result TEXT
-    )";
-    $db->exec($gamesInfoTable);
-
-
-    $stepsInfoTable = "CREATE TABLE stepsInfo(
-        idGame INTEGER,
-        attempts INTEGER,
-        letter TEXT,
-        result INTEGER
-    )";
-    $db->exec($stepsInfoTable);
-
-    return $db;
-}
-
-function openDatabase()
-{
-    if (!file_exists("gamedb.db")) {
-        $db = createDatabase();
-    } else {
-        $db = new \SQLite3('gamedb.db');
-    }
-    return $db;
 }
 
 function updateDB($idGame, $result)
 {
-    $db = openDatabase();
-    $db->exec("UPDATE gamesInfo
-        SET result = '$result'
-        WHERE idGame = '$idGame'");
+    $db = R::load('games', $idGame);
+    $db->result = $result;
+    R::store($db);
 }
 
 //результат игры
@@ -210,3 +164,5 @@ function showResult($answersCount, $playWord)
     }
     \cli\line("\nИгровое слово было: $playWord\n");
 }
+
+R::close();
